@@ -25,10 +25,21 @@ constexpr uint32_t MICROSECONDS_PER_SECOND = 1000000;
 constexpr uint32_t MICROSECONDS_PER_UPDATE = MICROSECONDS_PER_SECOND / TARGET_TICKRATE;
 constexpr uint32_t MICROSECONDS_PER_FRAME = TARGET_FRAMERATE > 0 ? MICROSECONDS_PER_SECOND / TARGET_FRAMERATE : 0;
 
+void notImplemented(void* caller, SDL_KeyboardEvent* event)
+{
+	std::cout << "[" << caller << "] Key [" << static_cast<char>(event->keysym.sym) << "] not implemented!" << std::endl;
+}
+
 Game::GameWindow::GameWindow(Object* parent) : Object(parent)
 {
 	windowName = "Window!";
 	SetIsRunning(true);
+
+	// Set all keys to default values
+	for (int i = 0; i < SDL_NUM_SCANCODES; i++)
+	{
+		keyBindings[i] = &notImplemented;
+	}
 }
 
 Game::GameWindow::~GameWindow()
@@ -211,20 +222,128 @@ int Game::GameWindow::GameLoop()
 void Game::GameWindow::ProcessEvents()
 {
 	SDL_Event evnt;
+
 	while (SDL_PollEvent(&evnt))
 	{
 		switch (evnt.type)
 		{
-			case SDL_EventType::SDL_KEYUP:
-				onKeyUp.trigger(this, &evnt.key);
-				break;
-			case SDL_EventType::SDL_KEYDOWN:
-				HandleInput(evnt.key.keysym);
-				onKeyDown.trigger(this, &evnt.key);
-				break;
-			case SDL_EventType::SDL_QUIT:
-				SetIsRunning(false);
-				break;
+		case SDL_EventType::SDL_KEYDOWN:
+			HandleKeyboard(evnt.key.keysym);
+			keyBindings[evnt.key.keysym.scancode](this, &evnt.key);
+			onKeyDown.trigger(this, &evnt.key);
+			break;
+		case SDL_EventType::SDL_KEYUP:
+			keyBindings[evnt.key.keysym.scancode](this, &evnt.key);
+			onKeyUp.trigger(this, &evnt.key);
+			break;
+		case SDL_EventType::SDL_MOUSEMOTION:
+			std::cout << "mouse moved" << std::endl;
+			break;
+		case SDL_EventType::SDL_MOUSEBUTTONDOWN:
+			std::cout << "mouse buttonpress" << std::endl;
+			break;
+		case SDL_EventType::SDL_MOUSEBUTTONUP:
+			std::cout << "mouse buttonrelease" << std::endl;
+			break;
+		case SDL_EventType::SDL_MOUSEWHEEL:
+			std::cout << "mouse wheel" << std::endl;
+			break;
+		case SDL_EventType::SDL_QUIT:
+			SetIsRunning(false);
+			break;
+		case SDL_EventType::SDL_AUDIODEVICEADDED:
+			break;
+		case SDL_EventType::SDL_AUDIODEVICEREMOVED:
+			break;
+		case SDL_EventType::SDL_CONTROLLERAXISMOTION:
+			break;
+		case SDL_EventType::SDL_CONTROLLERBUTTONDOWN:
+			break;
+		case SDL_EventType::SDL_CONTROLLERBUTTONUP:
+			break;
+		case SDL_EventType::SDL_CONTROLLERDEVICEADDED:
+			break;
+		case SDL_EventType::SDL_CONTROLLERDEVICEREMOVED:
+			break;
+		case SDL_EventType::SDL_CONTROLLERDEVICEREMAPPED:
+			break;
+		case SDL_EventType::SDL_JOYAXISMOTION:
+			break;
+		case SDL_EventType::SDL_JOYBALLMOTION:
+			break;
+		case SDL_EventType::SDL_JOYHATMOTION:
+			break;
+		case SDL_EventType::SDL_JOYBUTTONDOWN:
+			break;
+		case SDL_EventType::SDL_JOYBUTTONUP:
+			break;
+		case SDL_EventType::SDL_JOYDEVICEADDED:
+			break;
+		case SDL_EventType::SDL_JOYDEVICEREMOVED:
+			break;
+		case SDL_EventType::SDL_KEYMAPCHANGED:
+			break;
+		case SDL_EventType::SDL_APP_TERMINATING:
+			SetIsRunning(false);
+			break;
+		case SDL_EventType::SDL_APP_LOWMEMORY:
+			SetIsRunning(false);
+			break;
+		case SDL_EventType::SDL_APP_WILLENTERBACKGROUND:
+			break;
+		case SDL_EventType::SDL_APP_DIDENTERBACKGROUND:
+			break;
+		case SDL_EventType::SDL_APP_WILLENTERFOREGROUND:
+			break;
+		case SDL_EventType::SDL_APP_DIDENTERFOREGROUND:
+			break;
+		case SDL_EventType::SDL_DISPLAYEVENT:
+			std::cout << "displayevent" << std::endl;
+			break;
+		case SDL_EventType::SDL_WINDOWEVENT:
+			std::cout << "windowevent" << std::endl;
+			break;
+		case SDL_EventType::SDL_SYSWMEVENT:
+			std::cout << "system event" << std::endl;
+			break;
+		case SDL_EventType::SDL_TEXTEDITING:
+			break;
+		case SDL_EventType::SDL_TEXTINPUT:
+			break;
+		case SDL_EventType::SDL_FINGERDOWN:
+			break;
+		case SDL_EventType::SDL_FINGERUP:
+			break;
+		case SDL_EventType::SDL_FINGERMOTION:
+			break;
+		case SDL_EventType::SDL_DOLLARGESTURE:
+			break;
+		case SDL_EventType::SDL_DOLLARRECORD:
+			break;
+		case SDL_EventType::SDL_MULTIGESTURE:
+			break;
+		case SDL_EventType::SDL_CLIPBOARDUPDATE:
+			break;
+		case SDL_EventType::SDL_DROPFILE:
+			std::cout << "filedropped" << std::endl;
+			break;
+		case SDL_EventType::SDL_DROPTEXT:
+			break;
+		case SDL_EventType::SDL_DROPBEGIN:
+			std::cout << "drop begin" << std::endl;
+			break;
+		case SDL_EventType::SDL_DROPCOMPLETE:
+			std::cout << "drop done" << std::endl;
+			break;
+		case SDL_EventType::SDL_SENSORUPDATE:
+			std::cout << "sensor" << std::endl;
+			break;
+		case SDL_EventType::SDL_RENDER_TARGETS_RESET:
+			break;
+		case SDL_EventType::SDL_RENDER_DEVICE_RESET:
+			break;
+		case SDL_EventType::SDL_USEREVENT:
+			break;
 			default:
 				break;
 		}
@@ -233,7 +352,7 @@ void Game::GameWindow::ProcessEvents()
 
 bool isFullscreen = false; // @REMOVE
 
-void Game::GameWindow::HandleInput(SDL_Keysym keysym)
+void Game::GameWindow::HandleKeyboard(SDL_Keysym keysym)
 {
 	switch (keysym.scancode)
 	{
@@ -259,9 +378,9 @@ void Game::GameWindow::UpdateLogic()
 void Game::GameWindow::RenderFrame(float percentThroughFrame)
 {
 	//glViewport(0, 0, Game::Window::HEIGHT, Game::Window::WIDTH);
-	//glClearDepth(1.0);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	glClearDepth(1.0);
+	//glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(/*GL_COLOR_BUFFER_BIT | */GL_DEPTH_BUFFER_BIT);
 
 	glEnableClientState(GL_COLOR_ARRAY);
 
@@ -270,13 +389,25 @@ void Game::GameWindow::RenderFrame(float percentThroughFrame)
 	glBegin(GL_TRIANGLES);
 
 	glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-	glVertex2f(0.0f, 1.0f);
-
+	glVertex2f(-0.5f, 0.0f);
 	glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
 	glVertex2f(-1.0f, -1.0f);
+	glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+	glVertex2f(0.0f, -1.0f);
 
+	glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+	glVertex2f(0.5f, 0.0f);
+	glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+	glVertex2f(0.0f, -1.0f);
 	glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
 	glVertex2f(1.0f, -1.0f);
+
+	glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
+	glVertex2f(0.0f, 1.0f);
+	glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
+	glVertex2f(-0.5f, 0.0f);
+	glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
+	glVertex2f(0.5f, 0.0f);
 
 	glEnd();
 

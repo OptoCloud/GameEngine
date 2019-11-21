@@ -14,6 +14,8 @@
 */
 namespace Game
 {
+	class GameWindow;
+	typedef void (*keyFnPtr) (void*, SDL_KeyboardEvent*);
 	/*
 	 Game class
 	 This contains the game runtime and control over it
@@ -23,11 +25,14 @@ namespace Game
 		public:
 		EventHandler<void*, SDL_KeyboardEvent*> onKeyUp;
 		EventHandler<void*, SDL_KeyboardEvent*> onKeyDown;
+		EventHandler<void*, SDL_MouseWheelEvent*> onMouseWheel;
+		EventHandler<void*, SDL_MouseMotionEvent*> onMouseMoved;
+		EventHandler<void*, SDL_MouseButtonEvent*> onMouseClick;
 
-		void SetIsRunning(bool value) { _isRunning = value; }; /* Setter for _isRunning, game will stop if this gets set to false */
-		bool GetIsRunning() { return _isRunning; }; /* Getter for _isRunning */
-		int GetFps() { return _fps; }; /* Getter for _fps */
-		int GetUps() { return _ups; }; /* Getter for _ups */
+		void SetIsRunning(bool value) { _isRunning = value; } /* Setter for _isRunning, game will stop if this gets set to false */
+		bool GetIsRunning() { return _isRunning; } /* Getter for _isRunning */
+		int GetFps() { return _fps; } /* Getter for _fps */
+		int GetUps() { return _ups; } /* Getter for _ups */
 
 		GameWindow(Object* parent = nullptr); /* Object is inherited to this class */
 		~GameWindow();
@@ -47,6 +52,7 @@ namespace Game
 		SDL_Window* window = nullptr;
 		SDL_Surface* surface = nullptr;
 		SDL_GLContext glContext = nullptr;
+		keyFnPtr keyBindings[SDL_NUM_SCANCODES]; // Keyboard scancode -> Function map
 
 		GLuint _defaultShaderId = 0;
 
@@ -55,7 +61,7 @@ namespace Game
 		int InitOpenGL(); /* Initialize OpenGL */
 		int GameLoop(); /* Main game loop */
 		void ProcessEvents(); /* Handle events */
-		void HandleInput(SDL_Keysym keysym); /* handles inputs in the gamewindow */
+		void HandleKeyboard(SDL_Keysym keysym); /* handles inputs in the gamewindow */
 		void UpdateLogic(); /* Update physics of the game */
 		void RenderFrame(float percentThroughFrame); /* Render a frame, takes in a parameter for how distant the last and next logic updates are */
 		GLuint CompileGLShader(const char* pchShaderName, const char* pchVertexShader, const char* pchFragmentShader); /* Compiles vertex and fragment shaders */
